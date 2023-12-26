@@ -65,29 +65,43 @@ class PerevalsSerializer(WritableNestedModelSerializer):
                   'images',
                   'status'
                   ]
-        def create(self, validated_data, **kwargs):
-            user = validated_data.pop('user')
-            coords = validated_data.pop('coords')
-            level = validated_data.pop('level')
-            images = validated_data.pop('images')
-            pick_user = Users.objects.filter(email=user['email'])
-            if pick_user.exists():
-                user_serializer = UsersSerializer(data=user)
-                user_serializer.is_valid(raise_exception=True)
-                user = user_serializer.save()
-            else:
-                user = Users.objects.create(**user)
+    def create(self, validated_data, **kwargs):
+        user = validated_data.pop('user')
+        coords = validated_data.pop('coords')
+        level = validated_data.pop('level')
+        images = validated_data.pop('images')
+        pick_user = Users.objects.filter(email=user['email'])
+        if pick_user.exists():
+            user_serializer = UsersSerializer(data=user)
+            user_serializer.is_valid(raise_exception=True)
+            user = user_serializer.save()
+        else:
+            user = Users.objects.create(**user)
 
-            coords = Coords.objects.create(**coords)
-            level = Level.objects.create(**level)
-            pereval = Perevals.objects.create(**validated_data, user=user, coords=coords, level=level, status='new')
+        coords = Coords.objects.create(**coords)
+        level = Level.objects.create(**level)
+        pereval = Perevals.objects.create(**validated_data, user=user, coords=coords, level=level, status='new')
 
-            for image in images:
-                data = image.pop('data')
-                title = image.pop('title')
-                Images.objects.create(data=date_added, pereval=pereval, title=title)
+        for image in images:
+            data = image.pop('data')
+            title = image.pop('title')
+            Images.objects.create(data=data, pereval=pereval, title=title)
 
-            return pereval
-
+        return pereval
+        
+    def validate(self, data):
+        if self.instance is not None:
+            instance_user = self.instance.user
+            data_user = data.get('user')
+            validating_user_fields = [
+                instance_user.fam != data_user['fam'],
+                instance_user.name != data_user['name'],
+                instance_user.otc != data_user['otc'],
+                instance_user.phone != data_user['phone'],
+                instance_user.email != data_user['email'],
+            ]
+            if data_user is not None and any(validating_user_fields):
+                raise serializers.ValidationError({'Данные пользователя не могут быть изменены'})
+        return data
 
 

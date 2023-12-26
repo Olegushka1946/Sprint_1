@@ -9,9 +9,12 @@ class Users(models.Model):
     fam = models.CharField(max_length=128, verbose_name='Фамилия')
     name = models.CharField(max_length=128, verbose_name='Имя')
     otc = models.CharField(max_length=128, verbose_name='Отчество')
-    email = models.EmailField(unique=True)
-    phone = models.IntegerField(unique=True, verbose_name='Телефон')
-
+    email = models.EmailField()
+    phone = models.IntegerField(verbose_name='Телефон')
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['email'], name="user_unique")]
+    def __str__(self):
+        return f"{self.fam} {self.name} {self.otc}"
 
 class Coords(models.Model):
     latitude = models.FloatField(max_length=20, verbose_name='Широта')
@@ -94,8 +97,8 @@ class Perevals(models.Model):
 
 
 class Images(models.Model):
-    pereval = models.ForeignKey(Perevals, on_delete=models.CASCADE, related_name='images')
-    title = models.CharField(max_length=200, verbose_name='Название изображения')
+    pereval = models.ForeignKey(Perevals, on_delete=models.CASCADE, related_name='images', null=True, blank=True)
+    title = models.CharField(max_length=200, verbose_name='Название изображения', null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='Дата добавления')
     image = RichTextField(verbose_name='Изображение', blank=True, null=True)
 
