@@ -18,13 +18,7 @@ router.register(r'perevals', views.PerevalsViewSet)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
     path('submitData/', include('rest_framework.urls', namespace='rest_framework')),
-    path('api/submitData/', include(router.urls)),
-    path('api/submitData/user__email=<str:email>', EmailAPIView.as_view(), name='email-pereval'),
-    path('swagger-ui/', TemplateView.as_view(
-       template_name='swagger-ui.html',
-       extra_context={'schema_url':'openapi-schema'}
-   ), name='swagger-ui'),
+    path('api/submitData/user__email=<str:email>', EmailAPIView.as_view(), name='email-pereval')
 ]

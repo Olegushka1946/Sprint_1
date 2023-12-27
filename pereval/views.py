@@ -1,8 +1,8 @@
 import django_filters
-from django.shortcuts import render
 from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from django.http import JsonResponse
+
 
 from .serializers import *
 from .models import *
@@ -13,44 +13,36 @@ class UsersViewset(viewsets.ModelViewSet):
     serializer_class = UsersSerializer
     filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_fields = ['fam', 'name', 'otc', 'email']
-
+  
     def create(self, request, *args, **kwargs):
         serializer = UsersSerializer(data=request.data)
-        email = kwargs.get('email', None)
-        if Users.objects.filter(email=email).exists():
-                data = {
-                'message': f'Cуществует пользователь с таким email - {email}'
-            }
-                api_status = 404
-                return JsonResponse(data, status=api_status, safe=False)
-        else:
-            if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    {
-                        'status': status.HTTP_200_OK,
-                        'message': 'Успех!',
-                        'id': serializer.data['email'],
-                    }
-                )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    'status': status.HTTP_200_OK,
+                    'message': 'Успех!',
+                    'id': serializer.data['email'],
+                }
+            )
 
-            if status.HTTP_400_BAD_REQUEST:
-                return Response(
-                    {
-                        'status': status.HTTP_400_BAD_REQUEST,
-                        'message': 'Некорректный запрос',
-                        'id': None,
-                    }
-                )
+        if status.HTTP_400_BAD_REQUEST:
+            return Response(
+                {
+                    'status': status.HTTP_400_BAD_REQUEST,
+                    'message': 'Некорректный запрос',
+                    'id': None,
+                }
+            )
 
-            if status.HTTP_500_INTERNAL_SERVER_ERROR:
-                return Response(
-                    {
-                        'status': status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        'message': 'Ошибка при выполнении операции',
-                        'id': None,
-                    }
-                )
+        if status.HTTP_500_INTERNAL_SERVER_ERROR:
+            return Response(
+                {
+                    'status': status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    'message': 'Ошибка при выполнении операции',
+                    'id': None,
+                }
+            )
 
 class CoordsViewset(viewsets.ModelViewSet):
     queryset = Coords.objects.all()

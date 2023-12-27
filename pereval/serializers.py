@@ -8,19 +8,7 @@ class UsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = ['fam', 'name', 'otc', 'email', 'phone']
-        def save(self, **kwargs):
-            self.is_valid()
-            user = Users.objects.filter(email=self.validated_data.get('email'))
-            if user.exists():
-                return user.first()
-            else:
-                return Users.objects.create(
-                    email=self.validated_data.get('email'),
-                    fam=self.validated_data.get('fam'),
-                    name=self.validated_data.get('name'),
-                    otc=self.validated_data.get('otc'),
-                    phone=self.validated_data.get('phone'),
-                )
+
 
 
 class CoordsSerializer(serializers.ModelSerializer):
@@ -46,7 +34,7 @@ class ImagesSerializer(serializers.ModelSerializer):
 
 class PerevalsSerializer(WritableNestedModelSerializer):
     add_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
-    status = "new"
+    status = serializers.CharField(read_only=True)
     user = UsersSerializer()
     coord = CoordsSerializer()
     level = LevelSerializer()
@@ -54,7 +42,8 @@ class PerevalsSerializer(WritableNestedModelSerializer):
 
     class Meta:
         model = Perevals
-        fields = ['beauty_title',
+        fields = ['id',
+                  'beauty_title',
                   'title',
                   'other_titles',
                   'connect',
@@ -67,25 +56,18 @@ class PerevalsSerializer(WritableNestedModelSerializer):
                   ]
     def create(self, validated_data, **kwargs):
         user = validated_data.pop('user')
-        coords = validated_data.pop('coords')
+        coords = validated_data.pop('coord')
         level = validated_data.pop('level')
         images = validated_data.pop('images')
-        pick_user = Users.objects.filter(email=user['email'])
-        if pick_user.exists():
-            user_serializer = UsersSerializer(data=user)
-            user_serializer.is_valid(raise_exception=True)
-            user = user_serializer.save()
-        else:
-            user = Users.objects.create(**user)
-
+        user, created = Users.objects.get_or_create(**user)
         coords = Coords.objects.create(**coords)
         level = Level.objects.create(**level)
-        pereval = Perevals.objects.create(**validated_data, user=user, coords=coords, level=level, status='new')
+        pereval = Perevals.objects.create(**validated_data, user=user, coord=coords, level=level, status='new')
 
-        for image in images:
-            data = image.pop('data')
-            title = image.pop('title')
-            Images.objects.create(data=data, pereval=pereval, title=title)
+        for im in images:
+            image = im.pop('image')
+            title = im.pop('title')
+            Images.objects.create(image=image, pereval=pereval, title=title)
 
         return pereval
         
