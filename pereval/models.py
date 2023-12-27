@@ -11,10 +11,7 @@ class Users(models.Model):
     otc = models.CharField(max_length=128, verbose_name='Отчество')
     email = models.EmailField()
     phone = models.IntegerField(verbose_name='Телефон')
-    class Meta:
-        constraints = [models.UniqueConstraint(fields=['email'], name="user_unique")]
-    def __str__(self):
-        return f"{self.fam} {self.name} {self.otc}"
+
 
 class Coords(models.Model):
     latitude = models.FloatField(max_length=20, verbose_name='Широта')
